@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import '../models/photo_model.dart';
+import 'package:photo_table/widgets/photo_grid.dart';
 import '../models/user_model.dart';
-import '../services/api_service.dart';
-import '../widgets/photo_grid.dart';
 
 class HomeView extends StatefulWidget {
   final User user;
@@ -14,50 +12,77 @@ class HomeView extends StatefulWidget {
 }
 
 class _HomeViewState extends State<HomeView> {
-  late Future<List<Photo>> _photosFuture;
+  DateTime selectedDate = DateTime.now();
+  bool isWeeklyView = false;
+  PageController _dailyPageController = PageController(initialPage: 5000);
+  PageController _weeklyPageController = PageController(initialPage: 5000);
 
-  @override
-  void initState() {
-    super.initState();
-    _photosFuture = _fetchPhotos();
+  void _onDailyPageChanged(int index) {
+    setState(() {
+      int offset = 5000 - index; // 초기 페이지에서의 오프셋 계산
+      selectedDate = DateTime.now().subtract(Duration(days: offset));
+    });
   }
 
-  Future<List<Photo>> _fetchPhotos() async {
-    try {
-      final date = DateTime.now().toIso8601String().split('T').first; // 현재 날짜를 사용합니다.
-      final photos = await ApiService.fetchPhotos(widget.user.id, date);
-      // 12개의 슬롯을 빈 이미지로 초기화
-      List<Photo> slots = List.generate(12, (index) => Photo(id: '', uploadTimeSlot: index, photoUrl: ''));
-      // 서버에서 가져온 이미지를 해당 슬롯에 추가
-      for (var photo in photos) {
-        slots[photo.uploadTimeSlot] = photo;
+  void _onWeeklyPageChanged(int index) {
+    setState(() {
+      int offset = 5000 - index; // 초기 페이지에서의 오프셋 계산
+      selectedDate = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1 + 7 * offset));
+    });
+  }
+
+  void _toggleView() {
+    setState(() {
+      if (isWeeklyView) {
+        // 주간 뷰에서 일간 뷰로 전환할 때
+        int pageIndex = 5000 - DateTime.now().difference(selectedDate).inDays;
+        WidgetsBinding.instance?.addPostFrameCallback((_) {
+          _dailyPageController.jumpToPage(pageIndex);
+        });
+      } else {
+        // 일간 뷰에서 주간 뷰로 전환할 때
+        int pageIndex = 5000 - (DateTime.now().difference(selectedDate).inDays ~/ 7);
+        WidgetsBinding.instance?.addPostFrameCallback((_) {
+          _weeklyPageController.jumpToPage(pageIndex);
+        });
       }
-      return slots;
-    } catch (error) {
-      print('Failed to fetch photos: $error');
-      // 에러가 발생하면 12개의 빈 슬롯 반환
-      return List.generate(12, (index) => Photo(id: '', uploadTimeSlot: index, photoUrl: ''));
-    }
+      isWeeklyView = !isWeeklyView;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Photo Table'),
+        title: Text(isWeeklyView
+            ? '${selectedDate.month}-${selectedDate.day} ~ ${selectedDate.add(Duration(days: 6)).month}-${selectedDate.add(Duration(days: 6)).day}'
+            : selectedDate.toIso8601String().substring(0, 10)),
+        actions: [
+          IconButton(
+            icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week),
+            onPressed: _toggleView,
+          ),
+        ],
       ),
-      body: FutureBuilder<List<Photo>>(
-        future: _photosFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            return Center(child: Text('Failed to load photos'));
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-            return Center(child: Text('No photos available'));
-          } else {
-            return PhotoGrid(photos: snapshot.data!);
-          }
+      body: isWeeklyView
+          ? PageView.builder(
+        controller: _weeklyPageController,
+        onPageChanged: _onWeeklyPageChanged,
+        reverse: false, // 주간 뷰에서 reverse 설정
+        itemBuilder: (context, index) {
+          int offset = 5000 - index; // 초기 페이지에서의 오프셋 계산
+          DateTime startDate = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1 + 7 * offset));
+          return WeeklyPhotoGrid(selectedDate: startDate, user: widget.user);
+        },
+      )
+          : PageView.builder(
+        controller: _dailyPageController,
+        onPageChanged: _onDailyPageChanged,
+        reverse: false, // 일간 뷰에서 reverse 해제
+        itemBuilder: (context, index) {
+          int offset = 5000 - index; // 초기 페이지에서의 오프셋 계산
+          DateTime currentDate = DateTime.now().subtract(Duration(days: offset));
+          return DailyPhotoGrid(selectedDate: currentDate, user: widget.user);
         },
       ),
     );
