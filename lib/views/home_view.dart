@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:photo_table/widgets/photo_grid.dart';
-import '../models/user_model.dart';
+import 'package:photo_table/models/user_model.dart';
+import 'package:photo_table/views/daily_photo_grid.dart';
+import 'package:photo_table/views/weekly_photo_grid.dart';
 
 class HomeView extends StatefulWidget {
   final User user;
@@ -34,13 +35,11 @@ class _HomeViewState extends State<HomeView> {
   void _toggleView() {
     setState(() {
       if (isWeeklyView) {
-        // 주간 뷰에서 일간 뷰로 전환할 때
         int pageIndex = 5000 - DateTime.now().difference(selectedDate).inDays;
         WidgetsBinding.instance?.addPostFrameCallback((_) {
           _dailyPageController.jumpToPage(pageIndex);
         });
       } else {
-        // 일간 뷰에서 주간 뷰로 전환할 때
         int pageIndex = 5000 - (DateTime.now().difference(selectedDate).inDays ~/ 7);
         WidgetsBinding.instance?.addPostFrameCallback((_) {
           _weeklyPageController.jumpToPage(pageIndex);
@@ -53,38 +52,38 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
+        appBar: AppBar(
         title: Text(isWeeklyView
-            ? '${selectedDate.month}-${selectedDate.day} ~ ${selectedDate.add(Duration(days: 6)).month}-${selectedDate.add(Duration(days: 6)).day}'
-            : selectedDate.toIso8601String().substring(0, 10)),
-        actions: [
-          IconButton(
-            icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week),
-            onPressed: _toggleView,
-          ),
-        ],
-      ),
-      body: isWeeklyView
-          ? PageView.builder(
-        controller: _weeklyPageController,
-        onPageChanged: _onWeeklyPageChanged,
-        reverse: false, // 주간 뷰에서 reverse 설정
-        itemBuilder: (context, index) {
-          int offset = 5000 - index; // 초기 페이지에서의 오프셋 계산
-          DateTime startDate = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1 + 7 * offset));
-          return WeeklyPhotoGrid(selectedDate: startDate, user: widget.user);
-        },
-      )
-          : PageView.builder(
-        controller: _dailyPageController,
-        onPageChanged: _onDailyPageChanged,
-        reverse: false, // 일간 뷰에서 reverse 해제
-        itemBuilder: (context, index) {
-          int offset = 5000 - index; // 초기 페이지에서의 오프셋 계산
-          DateTime currentDate = DateTime.now().subtract(Duration(days: offset));
-          return DailyPhotoGrid(selectedDate: currentDate, user: widget.user);
-        },
-      ),
+        ? '${selectedDate.month}-${selectedDate.day} ~ ${selectedDate.add(Duration(days: 6)).month}-${selectedDate.add(Duration(days: 6)).day}'
+        : selectedDate.toIso8601String().substring(0, 10)),
+    actions: [
+    IconButton(
+    icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week),
+    onPressed: _toggleView,
+    ),
+    ],
+    ),
+    body: isWeeklyView
+    ? PageView.builder(
+      controller: _weeklyPageController,
+      onPageChanged: _onWeeklyPageChanged,
+      reverse: false,
+      itemBuilder: (context, index) {
+        int offset = 5000 - index;
+        DateTime startDate = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1 + 7 * offset));
+        return WeeklyPhotoGrid(selectedDate: startDate, user: widget.user);
+      },
+    )
+        : PageView.builder(
+      controller: _dailyPageController,
+      onPageChanged: _onDailyPageChanged,
+      reverse: false,
+      itemBuilder: (context, index) {
+        int offset = 5000 - index;
+        DateTime currentDate = DateTime.now().subtract(Duration(days: offset));
+        return DailyPhotoGrid(selectedDate: currentDate, user: widget.user);
+      },
+    ),
     );
   }
 }
