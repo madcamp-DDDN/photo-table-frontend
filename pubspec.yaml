@@ -37,6 +37,8 @@ dependencies:
   url_launcher: ^6.0.20
   uni_links: ^0.5.1
   flutter_layout_grid: ^2.0.0  # 최신 버전 확인 후 사용
+  cached_network_image: ^3.0.0
+
 
 
 dev_dependencies:

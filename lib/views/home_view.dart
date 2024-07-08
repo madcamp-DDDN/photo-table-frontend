@@ -57,33 +57,33 @@ class _HomeViewState extends State<HomeView> {
         ? '${selectedDate.month}-${selectedDate.day} ~ ${selectedDate.add(Duration(days: 6)).month}-${selectedDate.add(Duration(days: 6)).day}'
         : selectedDate.toIso8601String().substring(0, 10)),
     actions: [
-    IconButton(
-    icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week),
-    onPressed: _toggleView,
-    ),
+      IconButton(
+        icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week),
+        onPressed: _toggleView,
+      ),
     ],
-    ),
-    body: isWeeklyView
-    ? PageView.builder(
-      controller: _weeklyPageController,
-      onPageChanged: _onWeeklyPageChanged,
-      reverse: false,
-      itemBuilder: (context, index) {
-        int offset = 5000 - index;
-        DateTime startDate = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1 + 7 * offset));
-        return WeeklyPhotoGrid(selectedDate: startDate, user: widget.user);
-      },
-    )
-        : PageView.builder(
-      controller: _dailyPageController,
-      onPageChanged: _onDailyPageChanged,
-      reverse: false,
-      itemBuilder: (context, index) {
-        int offset = 5000 - index;
-        DateTime currentDate = DateTime.now().subtract(Duration(days: offset));
-        return DailyPhotoGrid(selectedDate: currentDate, user: widget.user);
-      },
-    ),
+        ),
+      body: isWeeklyView
+          ? PageView.builder(
+        controller: _weeklyPageController,
+        onPageChanged: _onWeeklyPageChanged,
+        reverse: false,
+        itemBuilder: (context, index) {
+          int offset = 5000 - index;
+          DateTime startDate = DateTime.now().subtract(Duration(days: DateTime.now().weekday - 1 + 7 * offset));
+          return WeeklyPhotoGrid(selectedDate: startDate, user: widget.user);
+        },
+      )
+          : PageView.builder(
+        controller: _dailyPageController,
+        onPageChanged: _onDailyPageChanged,
+        reverse: false,
+        itemBuilder: (context, index) {
+          int offset = 5000 - index;
+          DateTime currentDate = DateTime.now().subtract(Duration(days: offset));
+          return DailyPhotoGrid(selectedDate: currentDate, user: widget.user);
+        },
+      ),
     );
   }
 }
