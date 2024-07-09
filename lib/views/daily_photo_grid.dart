@@ -17,7 +17,7 @@ class DailyPhotoGrid extends StatelessWidget {
     double photoWidth = screenWidth - fixedColumnWidth; // 각 사진의 너비
     double photoHeight = (photoWidth / 3) * 4; // 가로 3: 세로 4 비율
 
-    return FutureBuilder<List<Photo>>(
+    return FutureBuilder<List<Photo?>>(
       future: ApiService.fetchPhotos(user.id, selectedDate.toIso8601String().substring(0, 10)),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
@@ -33,6 +33,8 @@ class DailyPhotoGrid extends StatelessWidget {
           fixedColumnWidth: fixedColumnWidth,
           photoWidth: photoWidth,
           photoHeight: photoHeight,
+          user: user,
+          selectedDate: selectedDate,
         );
       },
     );

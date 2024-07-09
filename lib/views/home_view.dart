@@ -1,12 +1,12 @@
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';  // 이미지 픽커 추가
+import 'package:photo_table/models/user_model.dart';
+import 'package:photo_table/views/daily_photo_grid.dart';
+import 'package:photo_table/views/weekly_photo_grid.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'dart:io';  // File 클래스 사용을 위해 추가
-import 'package:photo_table/services/api_service.dart';  // ApiService 사용을 위해 추가
-import '../models/user_model.dart';
-import '../views/daily_photo_grid.dart';
-import '../views/weekly_photo_grid.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:photo_table/services/api_service.dart';
+import 'dart:io';
+import 'package:device_info_plus/device_info_plus.dart';
 
 class HomeView extends StatefulWidget {
   final User user;
@@ -22,8 +22,6 @@ class _HomeViewState extends State<HomeView> {
   bool isWeeklyView = false;
   PageController _dailyPageController = PageController(initialPage: 5000);
   PageController _weeklyPageController = PageController(initialPage: 5000);
-
-  final ImagePicker _picker = ImagePicker();
 
   void _onDailyPageChanged(int index) {
     setState(() {
@@ -57,76 +55,53 @@ class _HomeViewState extends State<HomeView> {
   }
 
   Future<void> _pickAndUploadImage() async {
-    final result = await showDialog<ImageSource>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Select Image Source'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, ImageSource.camera),
-            child: Text('Camera'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, ImageSource.gallery),
-            child: Text('Gallery'),
-          ),
-        ],
-      ),
-    );
+    final ImagePicker _picker = ImagePicker();
 
-    if (result != null) {
-      await _requestPermissions();
-      final pickedFile = await _picker.pickImage(source: result);
+    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
 
-      if (pickedFile != null) {
-        await _uploadImage(File(pickedFile.path));
+    if (image == null) return;
+
+    // 권한 체크 및 요청 로직
+    var status = await Permission.camera.status;
+    if (!status.isGranted) {
+      status = await Permission.camera.request();
+      if (!status.isGranted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Camera permission not granted')));
+        return;
       }
     }
-  }
-
-  Future<void> _requestPermissions() async {
-    Map<Permission, PermissionStatus> statuses;
 
     if (Platform.isAndroid) {
       var androidInfo = await DeviceInfoPlugin().androidInfo;
-      var release = int.parse(androidInfo.version.release);
-
-      if (release < 11) {
-        statuses = await [
-          Permission.camera,
-          Permission.storage,
-        ].request();
+      if (androidInfo.version.sdkInt < 30) {
+        var storageStatus = await Permission.storage.status;
+        if (!storageStatus.isGranted) {
+          storageStatus = await Permission.storage.request();
+          if (!storageStatus.isGranted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Storage permission not granted')));
+            return;
+          }
+        }
       } else {
-        statuses = await [
-          Permission.camera,
-          Permission.manageExternalStorage,
-        ].request();
+        var manageStorageStatus = await Permission.manageExternalStorage.status;
+        if (!manageStorageStatus.isGranted) {
+          manageStorageStatus = await Permission.manageExternalStorage.request();
+          if (!manageStorageStatus.isGranted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Manage external storage permission not granted')));
+            return;
+          }
+        }
       }
-    } else {
-      statuses = await [
-        Permission.camera,
-        Permission.photos,
-      ].request();
     }
 
-    statuses.forEach((permission, status) {
-      if (!status.isGranted) {
-        throw Exception('Permission not granted: ${permission.toString()}');
-      }
-    });
-  }
+    final bool success = await ApiService.uploadPhoto(widget.user.id, selectedDate.toIso8601String().substring(0, 10), (selectedDate.hour ~/ 2) + 1, image.path);
 
-  Future<void> _uploadImage(File image) async {
-    try {
-      String userId = widget.user.id;
-      String date = DateTime.now().toIso8601String().substring(0, 10);
-      int timeSlot = (DateTime.now().hour / 2).floor();  // 2시간 간격으로 타임 슬롯 결정
-
-      await ApiService.uploadPhoto(userId, date, timeSlot, image.path);
-
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Photo uploaded successfully')));
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload photo: $e')));
+    if (success) {
+      setState(() {
+        // Re-render the current grid to display the uploaded image
+      });
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload photo')));
     }
   }
 

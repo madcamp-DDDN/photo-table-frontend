@@ -4,17 +4,23 @@ import '../dot.dart';
 import '../models/photo_model.dart';
 
 class ApiService {
-  static Future<List<Photo>> fetchPhotos(String userId, String date) async {
+  static Future<List<Photo?>> fetchPhotos(String userId, String date) async {
     final url = Uri.parse('${DotEnvConfig.apiBaseUrl}/api/photos?user_id=$userId&date=$date');
     final response = await http.get(url);
 
     if (response.statusCode == 200) {
       List<dynamic> photosJson = jsonDecode(response.body)['photos'];
-      return photosJson.map((json) => Photo(
-          id: json['photo_data_id'],
-          uploadTimeSlot: json['upload_time_slot'],
-          photoUrl: json['photo_url']
-      )).toList();
+      return photosJson.map((json) {
+        if (json == null) {
+          return null;
+        } else {
+          return Photo(
+            id: json['photo_data_id'],
+            uploadTimeSlot: json['upload_time_slot'],
+            photoUrl: json['photo_url'],
+          );
+        }
+      }).toList();
     } else {
       throw Exception('Failed to load photos');
     }
@@ -32,8 +38,7 @@ class ApiService {
 
     if (response.statusCode == 200) {
       return true;
-    }
-    else {
+    } else {
       return false;
     }
   }
