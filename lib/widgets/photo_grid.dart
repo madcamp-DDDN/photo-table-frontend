@@ -13,6 +13,7 @@ class PhotoGrid extends StatefulWidget {
   final bool isWeekly;
   final User user;
   final DateTime selectedDate;
+  final ScrollController? scrollController; // 추가: 스크롤 컨트롤러
 
   PhotoGrid({
     required this.photos,
@@ -23,6 +24,7 @@ class PhotoGrid extends StatefulWidget {
     required this.user,
     required this.selectedDate,
     this.isWeekly = false,
+    this.scrollController, // 추가: 스크롤 컨트롤러
   });
 
   @override
@@ -83,6 +85,7 @@ class _PhotoGridState extends State<PhotoGrid> {
     double currentTimePosition = ((now.hour * 60 + now.minute) / (24 * 60)) * totalHeight;
 
     return SingleChildScrollView(
+      controller: widget.scrollController, // 수정: 스크롤 컨트롤러 사용
       scrollDirection: Axis.vertical,
       child: Stack(
         children: [
