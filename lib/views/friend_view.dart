@@ -1,12 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import '../models/user_model.dart';
+import 'package:photo_table/services/friend_service.dart';
+import '../models/user_model.dart' as AppUser;
 import '../models/friend_model.dart';
-import '../services/friend_service.dart';
-import '../widgets/friend_list.dart';
+import 'package:flutter/services.dart';
 
 class FriendView extends StatefulWidget {
-  final User user;
+  final AppUser.User user;
 
   FriendView({required this.user});
 
@@ -15,50 +14,33 @@ class FriendView extends StatefulWidget {
 }
 
 class _FriendViewState extends State<FriendView> {
-  List<Friend> friends = [];
-  String? token;
-  TextEditingController _tokenController = TextEditingController();
+  late Future<List<Friend>> _friends;
+  late Future<AppUser.User> _userProfile;
 
   @override
   void initState() {
     super.initState();
-    _loadFriends();
+    _friends = FriendService.fetchFriends(widget.user.id);
+    _userProfile = FriendService.fetchUserProfile(widget.user.id);
   }
 
-  Future<void> _loadFriends() async {
-    try {
-      List<Friend> loadedFriends = await FriendService.fetchFriends(widget.user.id);
-      setState(() {
-        friends = loadedFriends;
-      });
-    } catch (e) {
-      print('Failed to load friends: $e');
-    }
-  }
-
-  Future<void> _generateFriendLink() async {
-    String? newToken = await FriendService.generateFriendLink(widget.user.id);
-    if (newToken != null) {
-      setState(() {
-        token = newToken;
-      });
-      Clipboard.setData(ClipboardData(text: newToken));
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Link copied to clipboard')));
+  void _generateFriendLink() async {
+    final token = await FriendService.generateFriendLink(widget.user.id);
+    if (token != null) {
+      Clipboard.setData(ClipboardData(text: token));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Friend link copied to clipboard')));
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to generate link')));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to generate friend link')));
     }
   }
 
-  Future<void> _acceptFriend() async {
-    String inputToken = _tokenController.text;
-    print("accept");
-    print(inputToken);
-    print(widget.user.id);
-    bool success = await FriendService.acceptFriend(inputToken, widget.user.id);
+  void _acceptFriend(String token) async {
+    final success = await FriendService.acceptFriend(token, widget.user.id);
     if (success) {
-      _tokenController.clear();
+      setState(() {
+        _friends = FriendService.fetchFriends(widget.user.id);
+      });
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Friend added successfully')));
-      _loadFriends();
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add friend')));
     }
@@ -66,29 +48,77 @@ class _FriendViewState extends State<FriendView> {
 
   @override
   Widget build(BuildContext context) {
+    TextEditingController _controller = TextEditingController();
+
     return Scaffold(
-      appBar: AppBar(title: Text('Friends')),
-      body: Column(
-        children: [
-          FriendList(friends: friends),
-          SizedBox(height: 20),
-          ElevatedButton(
-            onPressed: _generateFriendLink,
-            child: Text('Generate Friend Link'),
-          ),
-          if (token != null) Text('Token: $token'),
-          Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: TextField(
-              controller: _tokenController,
-              decoration: InputDecoration(labelText: 'Enter Token'),
-            ),
-          ),
-          ElevatedButton(
-            onPressed: _acceptFriend,
-            child: Text('Add Friend'),
-          ),
-        ],
+      appBar: AppBar(
+        title: Text('Friends'),
+      ),
+      body: FutureBuilder<AppUser.User>(
+        future: _userProfile,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.waiting) {
+            return Center(child: CircularProgressIndicator());
+          } else if (snapshot.hasError) {
+            print('Error fetching user profile: ${snapshot.error}');
+            return Center(child: Text('Error: ${snapshot.error}'));
+          } else if (!snapshot.hasData || snapshot.data == null) {
+            return Center(child: Text('No user data found'));
+          }
+
+          final userProfile = snapshot.data!;
+          return Column(
+            children: [
+              ListTile(
+                leading: userProfile.profileImageUrl.isNotEmpty
+                    ? Image.network(userProfile.profileImageUrl)
+                    : Icon(Icons.account_circle, size: 50),
+                title: Text(userProfile.name.isNotEmpty ? userProfile.name : 'Unknown'),
+              ),
+              TextField(
+                controller: _controller,
+                decoration: InputDecoration(labelText: 'Enter friend link token'),
+              ),
+              ElevatedButton(
+                onPressed: () => _acceptFriend(_controller.text),
+                child: Text('Add Friend'),
+              ),
+              ElevatedButton(
+                onPressed: _generateFriendLink,
+                child: Text('Generate Friend Link'),
+              ),
+              Expanded(
+                child: FutureBuilder<List<Friend>>(
+                  future: _friends,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return Center(child: CircularProgressIndicator());
+                    } else if (snapshot.hasError) {
+                      print('Error fetching friends: ${snapshot.error}');
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data == null) {
+                      return Center(child: Text('No friends data found'));
+                    }
+
+                    final friends = snapshot.data ?? [];
+                    return ListView.builder(
+                      itemCount: friends.length,
+                      itemBuilder: (context, index) {
+                        final friend = friends[index];
+                        return ListTile(
+                          leading: friend.profilePicUrl.isNotEmpty
+                              ? Image.network(friend.profilePicUrl)
+                              : Icon(Icons.account_circle, size: 50),
+                          title: Text(friend.name.isNotEmpty ? friend.name : 'Unknown'),
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }
