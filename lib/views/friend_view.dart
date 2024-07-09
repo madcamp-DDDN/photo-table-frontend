@@ -71,21 +71,51 @@ class _FriendViewState extends State<FriendView> {
             children: [
               ListTile(
                 leading: userProfile.profileImageUrl.isNotEmpty
-                    ? Image.network(userProfile.profileImageUrl)
+                    ? Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    image: DecorationImage(
+                      image: NetworkImage(userProfile.profileImageUrl),
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                )
                     : Icon(Icons.account_circle, size: 50),
                 title: Text(userProfile.name.isNotEmpty ? userProfile.name : 'Unknown'),
               ),
-              TextField(
-                controller: _controller,
-                decoration: InputDecoration(labelText: 'Enter friend link token'),
-              ),
-              ElevatedButton(
-                onPressed: () => _acceptFriend(_controller.text),
-                child: Text('Add Friend'),
-              ),
-              ElevatedButton(
-                onPressed: _generateFriendLink,
-                child: Text('Generate Friend Link'),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  children: [
+                    TextField(
+                      controller: _controller,
+                      decoration: InputDecoration(
+                        labelText: 'Enter friend link token',
+                        border: OutlineInputBorder(),
+                      ),
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => _acceptFriend(_controller.text),
+                            child: Text('Add Friend'),
+                          ),
+                        ),
+                        SizedBox(width: 10),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _generateFriendLink,
+                            child: Text('Generate Friend Link'),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
               Expanded(
                 child: FutureBuilder<List<Friend>>(
@@ -107,7 +137,17 @@ class _FriendViewState extends State<FriendView> {
                         final friend = friends[index];
                         return ListTile(
                           leading: friend.profilePicUrl.isNotEmpty
-                              ? Image.network(friend.profilePicUrl)
+                              ? Container(
+                            width: 50,
+                            height: 50,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              image: DecorationImage(
+                                image: NetworkImage(friend.profilePicUrl),
+                                fit: BoxFit.cover,
+                              ),
+                            ),
+                          )
                               : Icon(Icons.account_circle, size: 50),
                           title: Text(friend.name.isNotEmpty ? friend.name : 'Unknown'),
                         );
