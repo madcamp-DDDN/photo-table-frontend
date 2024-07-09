@@ -49,7 +49,7 @@ class _FriendViewState extends State<FriendView> {
     }
   }
 
-  void _showFriendDailyPhotos(Friend friend) {
+  void _showFriendDailyPhotos(Friend friend) {//친구 시간표 불러오기
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -113,7 +113,7 @@ class _FriendViewState extends State<FriendView> {
             return Center(child: Text('No user data found'));
           }
 
-          final userProfile = snapshot.data!;
+          final userProfile = snapshot.data!;//내 정보
           return Column(
             children: [
               ListTile(
@@ -132,7 +132,7 @@ class _FriendViewState extends State<FriendView> {
                     : Icon(Icons.account_circle, size: 50),
                 title: Text(userProfile.name.isNotEmpty ? userProfile.name : 'Unknown'),
               ),
-              Padding(
+              Padding(//friend link token
                 padding: const EdgeInsets.all(8.0),
                 child: Column(
                   children: [
@@ -144,7 +144,7 @@ class _FriendViewState extends State<FriendView> {
                       ),
                     ),
                     SizedBox(height: 10),
-                    Row(
+                    Row(// 버튼 두개
                       children: [
                         Expanded(
                           child: ElevatedButton(
@@ -164,7 +164,7 @@ class _FriendViewState extends State<FriendView> {
                   ],
                 ),
               ),
-              Expanded(
+              Expanded(//friend list
                 child: FutureBuilder<List<Friend>>(
                   future: _friends,
                   builder: (context, snapshot) {

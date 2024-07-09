@@ -59,7 +59,19 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Photo Table',
-      home: _user == null ? LoginView() : MainTabView(user: _user!),
+      home: Container(
+        decoration: BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/background.jpg'), // 배경 이미지 설정
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Scaffold(
+          extendBodyBehindAppBar: true,
+          backgroundColor: Colors.transparent, // Scaffold 배경색을 투명으로 설정
+          body: _user == null ? LoginView() : MainTabView(user: _user!),
+        ),
+      ),
     );
   }
 }
@@ -90,16 +102,21 @@ class _MainTabViewState extends State<MainTabView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      backgroundColor: Colors.transparent, // 배경색을 #212024로 지정
       body: Center(
         child: _widgetOptions(widget.user).elementAt(_selectedIndex),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Color(0x80212024),
+        // backgroundColor: Colors.transparent,
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Friends'),
         ],
         currentIndex: _selectedIndex,
-        selectedItemColor: Colors.amber[800],
+        selectedItemColor: Color(0xFFFEB702),
+        unselectedItemColor: Color(0xFF8c8c8c),
         onTap: _onItemTapped,
       ),
     );

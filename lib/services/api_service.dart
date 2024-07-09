@@ -66,8 +66,11 @@ class ApiService {
     final response = await http.delete(url);
 
     if (response.statusCode != 200) {
-      throw Exception('Failed to delete photo');
+      // throw Exception('Failed to delete photo');
+      final responseBody = jsonDecode(response.body);
+      throw Exception('Failed to delete photo: ${responseBody['error']}');
     }
   }
+
 
 }

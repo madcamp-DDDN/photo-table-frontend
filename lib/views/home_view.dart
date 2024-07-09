@@ -234,17 +234,28 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        title: Text(isWeeklyView
-            ? '${selectedDate.month}-${selectedDate.day} ~ ${selectedDate.add(Duration(days: 6)).month}-${selectedDate.add(Duration(days: 6)).day}'
-            : selectedDate.toIso8601String().substring(0, 10)),
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+          //backgroundColor: Color(0x80212024),
+        title: Padding(
+          padding: const EdgeInsets.only(left: 10.0), // AppBar의 title에 좌우 패딩 추가
+          child: Image.asset(
+            'assets/logo1.png', // 로고 이미지 경로 설정
+            height: 40, // 로고 이미지 높이 설정
+          ),
+        ),
+        // title: Image.asset('assets/logo1.png',height: 40,),
         actions: [
           IconButton(
-            icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week),
+            padding: const EdgeInsets.only(right: 10.0),
+            icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week, color: Colors.white),
             onPressed: _toggleView,
           ),
           IconButton(
-            icon: Icon(Icons.download), // 다운로드 버튼
+            padding: const EdgeInsets.only(right: 20.0),
+            icon: Icon(Icons.download, color: Colors.white), // 다운로드 버튼
             onPressed: _downloadMergedImage, // 버튼을 누르면 _downloadMergedImage 함수 호출
           ),
         ],
