@@ -8,6 +8,11 @@ import 'package:photo_table/services/api_service.dart';
 import 'dart:io';
 import 'package:device_info_plus/device_info_plus.dart';
 
+import 'package:http/http.dart' as http; // 수정: http 라이브러리 import 추가
+import 'package:path_provider/path_provider.dart'; // 수정: path_provider import 추가
+import '../dot.dart';
+import 'package:image_gallery_saver/image_gallery_saver.dart'; // 추가: image_gallery_saver import
+
 class HomeView extends StatefulWidget {
   final User user;
 
@@ -52,6 +57,67 @@ class _HomeViewState extends State<HomeView> {
       }
       isWeeklyView = !isWeeklyView;
     });
+  }
+
+  // 사진을 merge 해서 export 하는 함수
+  Future<void> _downloadMergedImage() async {
+    // 스토리지 권한 요청
+    if (Platform.isAndroid) {
+      var androidInfo = await DeviceInfoPlugin().androidInfo;
+      if (androidInfo.version.sdkInt < 30) {
+        var storageStatus = await Permission.storage.status;
+        if (!storageStatus.isGranted) {
+          storageStatus = await Permission.storage.request();
+          if (!storageStatus.isGranted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Storage permission not granted')));
+            return;
+          }
+        }
+      } else {
+        var manageStorageStatus = await Permission.manageExternalStorage.status;
+        if (!manageStorageStatus.isGranted) {
+          manageStorageStatus = await Permission.manageExternalStorage.request();
+          if (!manageStorageStatus.isGranted) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Manage external storage permission not granted')));
+            return;
+          }
+        }
+      }
+    } else {
+      var storageStatus = await Permission.storage.status;
+      if (!storageStatus.isGranted) {
+        storageStatus = await Permission.storage.request();
+        if (!storageStatus.isGranted) {
+          ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Storage permission not granted')));
+          return;
+        }
+      }
+    }
+
+    // 백엔드에서 합쳐진 이미지를 가져옴
+    final response = await ApiService.fetchMergedPhotos(widget.user.id, selectedDate.toIso8601String().substring(0, 10)); // 수정: ApiService 사용
+
+    if (response.statusCode == 200) {
+      // 파일을 저장할 디렉토리를 가져옴
+      final dir = await getApplicationDocumentsDirectory(); // 수정: getApplicationDocumentsDirectory 함수 사용
+      final filePath = '${dir.path}/${widget.user.id}_${selectedDate.toIso8601String().substring(0, 10)}.jpg';
+      final file = File(filePath);
+
+      // 응답 본문을 파일로 작성
+      await file.writeAsBytes(response.bodyBytes);
+
+      // 파일을 갤러리에 저장
+      final result = await ImageGallerySaver.saveFile(filePath); // 추가: 파일을 갤러리에 저장
+      if (result['isSuccess']) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Photo saved to gallery: $filePath')));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save photo to gallery')));
+      }
+
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Photo downloaded: $filePath')));
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to download photo')));
+    }
   }
 
   Future<void> _pickAndUploadImage() async {
@@ -116,6 +182,10 @@ class _HomeViewState extends State<HomeView> {
           IconButton(
             icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week),
             onPressed: _toggleView,
+          ),
+          IconButton(
+            icon: Icon(Icons.download), // 다운로드 버튼
+            onPressed: _downloadMergedImage, // 버튼을 누르면 _downloadMergedImage 함수 호출
           ),
         ],
       ),

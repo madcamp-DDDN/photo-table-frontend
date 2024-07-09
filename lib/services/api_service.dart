@@ -53,4 +53,11 @@ class ApiService {
       throw Exception('Failed to fetch photo');
     }
   }
+
+  static Future<http.Response> fetchMergedPhotos(String userId, String date) async {
+    final url = '${DotEnvConfig.apiBaseUrl}/api/merge-photos?user_id=$userId&date=$date';
+    final response = await http.get(Uri.parse(url));
+    return response;
+  }
+
 }
