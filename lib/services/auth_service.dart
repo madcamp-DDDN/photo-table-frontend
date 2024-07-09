@@ -28,7 +28,7 @@ class AuthService {
 
       if (userId != null) {
         print('Successfully logged in with Kakao, user_id: $userId');
-        return AppUser.User(id: userId, name: '');  // 실제로는 백엔드에서 사용자의 정보를 가져와야 합니다.
+        return AppUser.User(id: userId, name: '', profileImageUrl: '');  // 사용자 ID, 이름, 프로필 사진 URL을 저장합니다.
       } else {
         print('Failed to retrieve user_id from frontend redirect URI');
         return null;

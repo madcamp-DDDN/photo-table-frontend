@@ -35,7 +35,11 @@ class _MyAppState extends State<MyApp> {
           final userId = uri.queryParameters['user_id'];
           if (userId != null) {
             setState(() {
-              _user = AppUser.User(id: userId, name: ''); // 실제로는 백엔드에서 사용자 정보를 가져와야 합니다.
+              _user = AppUser.User(
+                id: userId,
+                name: '', // 빈 문자열로 초기화
+                profileImageUrl: '', // 빈 문자열로 초기화
+              );
             });
           }
         }
