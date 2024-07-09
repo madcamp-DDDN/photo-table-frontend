@@ -5,6 +5,7 @@ import 'package:kakao_flutter_sdk_user/kakao_flutter_sdk_user.dart'; // Kakao SD
 import 'dot.dart';
 import 'views/login_view.dart';
 import 'views/home_view.dart';
+import 'views/friend_view.dart';
 import 'models/user_model.dart' as AppUser;
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
@@ -54,7 +55,49 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Photo Table',
-      home: _user == null ? LoginView() : HomeView(user: _user!),
+      home: _user == null ? LoginView() : MainTabView(user: _user!),
+    );
+  }
+}
+
+class MainTabView extends StatefulWidget {
+  final AppUser.User user;
+
+  MainTabView({required this.user});
+
+  @override
+  _MainTabViewState createState() => _MainTabViewState();
+}
+
+class _MainTabViewState extends State<MainTabView> {
+  int _selectedIndex = 0;
+
+  static List<Widget> _widgetOptions(AppUser.User user) => <Widget>[
+    HomeView(user: user),
+    FriendView(user: user),
+  ];
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: _widgetOptions(widget.user).elementAt(_selectedIndex),
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
+          BottomNavigationBarItem(icon: Icon(Icons.people), label: 'Friends'),
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.amber[800],
+        onTap: _onItemTapped,
+      ),
     );
   }
 }
