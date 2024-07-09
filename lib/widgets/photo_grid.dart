@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_layout_grid/flutter_layout_grid.dart';
-import 'package:cached_network_image/cached_network_image.dart';
 import '../models/photo_model.dart';
 
 class PhotoGrid extends StatelessWidget {
@@ -57,12 +56,7 @@ class PhotoGrid extends StatelessWidget {
                       width: photoWidth,
                       height: photoHeight,
                       child: photos.isNotEmpty && photos[i + j * 12].id.isNotEmpty
-                          ? CachedNetworkImage(
-                        imageUrl: photos[i + j * 12].photoUrl,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                        errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
-                      )
+                          ? Image.network(photos[i + j * 12].photoUrl, fit: BoxFit.cover)
                           : Center(child: Text('${i * 2}:00')),
                     ),
                   ).withGridPlacement(columnStart: j + 1, rowStart: i),
@@ -100,12 +94,7 @@ class PhotoGrid extends StatelessWidget {
             child: Container(
               width: screenWidth,
               height: (screenWidth / 3) * 4,
-              child: CachedNetworkImage(
-                imageUrl: photo.photoUrl,
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Center(child: CircularProgressIndicator()),
-                errorWidget: (context, url, error) => Center(child: Icon(Icons.error)),
-              ),
+              child: Image.network(photo.photoUrl, fit: BoxFit.cover),
             ),
           ),
         );

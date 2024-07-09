@@ -20,7 +20,7 @@ class ApiService {
     }
   }
 
-  static Future<void> uploadPhoto(String userId, String date, int timeSlot, String filePath) async {
+  static Future<bool> uploadPhoto(String userId, String date, int timeSlot, String filePath) async {
     final url = Uri.parse('${DotEnvConfig.apiBaseUrl}/api/upload');
     var request = http.MultipartRequest('POST', url)
       ..fields['user_id'] = userId
@@ -30,8 +30,11 @@ class ApiService {
 
     final response = await request.send();
 
-    if (response.statusCode != 200) {
-      throw Exception('Failed to upload photo');
+    if (response.statusCode == 200) {
+      return true;
+    }
+    else {
+      return false;
     }
   }
 
