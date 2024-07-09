@@ -25,7 +25,8 @@ if (flutterVersionName == null) {
 
 android {
     namespace = "com.example.photo_table"
-    compileSdk = flutter.compileSdkVersion
+//    compileSdk = flutter.compileSdkVersion
+    compileSdk = 34 // 수정: compileSdk를 30으로 설정
     ndkVersion = flutter.ndkVersion
 
     compileOptions {
@@ -39,7 +40,9 @@ android {
         // You can update the following values to match your application needs.
         // For more information, see: https://docs.flutter.dev/deployment/android#reviewing-the-gradle-build-configuration.
         minSdk = flutter.minSdkVersion
-        targetSdk = flutter.targetSdkVersion
+//        targetSdk = flutter.targetSdkVersion
+        minSdk = 21 // 수정: minSdk를 16으로 설정
+        targetSdk = 34 // 수정: targetSdk를 30으로 설정
         versionCode = flutterVersionCode.toInteger()
         versionName = flutterVersionName
     }
@@ -55,4 +58,8 @@ android {
 
 flutter {
     source = "../.."
+}
+
+dependencies {
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:$kotlin_version" // 추가: Kotlin stdlib 의존성
 }
