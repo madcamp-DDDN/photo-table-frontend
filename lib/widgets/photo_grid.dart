@@ -60,17 +60,55 @@ class _PhotoGridState extends State<PhotoGrid> {
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).pop();
-            },
-            child: Container(
-              width: screenWidth,
-              height: (screenWidth / 3) * 4,
-              child: Image.network(photo.photoUrl, fit: BoxFit.cover),
-            ),
+          child: Stack(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                child: Container(
+                  width: screenWidth,
+                  height: (screenWidth / 3) * 4,
+                  child: Image.network(photo.photoUrl, fit: BoxFit.cover),
+                ),
+              ),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: IconButton(
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  onPressed: () async {
+                    try {
+                      await ApiService.deletePhoto(photo.id);
+                      Navigator.of(context).pop();
+                      await _refreshPhoto(photoIndex);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Photo deleted successfully')),
+                      );
+                    } catch (error) {
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to delete photo')),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
         );
+        // return Dialog(
+        //   child: GestureDetector(
+        //     onTap: () {
+        //       Navigator.of(context).pop();
+        //     },
+        //     child: Container(
+        //       width: screenWidth,
+        //       height: (screenWidth / 3) * 4,
+        //       child: Image.network(photo.photoUrl, fit: BoxFit.cover),
+        //     ),
+        //   ),
+        // );
       },
     );
 
