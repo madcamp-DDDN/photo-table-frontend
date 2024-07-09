@@ -3,6 +3,9 @@ import 'package:photo_table/services/friend_service.dart';
 import '../models/user_model.dart' as AppUser;
 import '../models/friend_model.dart';
 import 'package:flutter/services.dart';
+import '../widgets/photo_grid.dart';
+import '../models/photo_model.dart';
+import '../services/api_service.dart';
 
 class FriendView extends StatefulWidget {
   final AppUser.User user;
@@ -44,6 +47,50 @@ class _FriendViewState extends State<FriendView> {
     } else {
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add friend')));
     }
+  }
+
+  void _showFriendDailyPhotos(Friend friend) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          child: Scaffold(
+            appBar: AppBar(
+              title: Text('${friend.name}\'s Photos'),
+              actions: [
+                IconButton(
+                  icon: Icon(Icons.close),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            ),
+            body: FutureBuilder<List<Photo?>>(
+              future: ApiService.fetchPhotos(friend.id, DateTime.now().toIso8601String().substring(0, 10)),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                } else if (snapshot.hasError) {
+                  return Center(child: Text('Error: ${snapshot.error}'));
+                }
+
+                final photos = snapshot.data ?? [];
+                return PhotoGrid(
+                  photos: photos,
+                  columnCount: 1,
+                  fixedColumnWidth: 60.0,
+                  photoWidth: MediaQuery.of(context).size.width - 60.0,
+                  photoHeight: (MediaQuery.of(context).size.width - 60.0) / 3 * 4,
+                  user: AppUser.User(id: friend.id, name: friend.name, profileImageUrl: friend.profilePicUrl),
+                  selectedDate: DateTime.now(),
+                );
+              },
+            ),
+          ),
+        );
+      },
+    );
   }
 
   @override
@@ -150,6 +197,7 @@ class _FriendViewState extends State<FriendView> {
                           )
                               : Icon(Icons.account_circle, size: 50),
                           title: Text(friend.name.isNotEmpty ? friend.name : 'Unknown'),
+                          onTap: () => _showFriendDailyPhotos(friend),
                         );
                       },
                     );
