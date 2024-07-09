@@ -20,8 +20,8 @@ class FriendService {
     final url = Uri.parse('${DotEnvConfig.apiBaseUrl}/api/friends/acceptFriend');
     final response = await http.post(
       url,
-      headers: {'Content-Type': 'application/x-www-form-urlencoded'},
-      body: {'token': token, 'userId': userId},
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'token': token, 'userId': userId}),
     );
 
     if (response.statusCode == 200) {
