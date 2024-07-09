@@ -123,52 +123,112 @@ class _HomeViewState extends State<HomeView> {
   Future<void> _pickAndUploadImage() async {
     final ImagePicker _picker = ImagePicker();
 
-    final XFile? image = await _picker.pickImage(source: ImageSource.camera);
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Wrap(
+          children: <Widget>[
+            ListTile(
+              leading: Icon(Icons.camera_alt),
+              title: Text('Take a photo'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                final XFile? image = await _picker.pickImage(source: ImageSource.camera);
 
-    if (image == null) return;
+                if (image == null) return;
 
-    // 권한 체크 및 요청 로직
-    var status = await Permission.camera.status;
-    if (!status.isGranted) {
-      status = await Permission.camera.request();
-      if (!status.isGranted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Camera permission not granted')));
-        return;
-      }
-    }
+                // 권한 체크 및 요청 로직
+                var status = await Permission.camera.status;
+                if (!status.isGranted) {
+                  status = await Permission.camera.request();
+                  if (!status.isGranted) {
+                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Camera permission not granted')));
+                    return;
+                  }
+                }
 
-    if (Platform.isAndroid) {
-      var androidInfo = await DeviceInfoPlugin().androidInfo;
-      if (androidInfo.version.sdkInt < 30) {
-        var storageStatus = await Permission.storage.status;
-        if (!storageStatus.isGranted) {
-          storageStatus = await Permission.storage.request();
-          if (!storageStatus.isGranted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Storage permission not granted')));
-            return;
-          }
-        }
-      } else {
-        var manageStorageStatus = await Permission.manageExternalStorage.status;
-        if (!manageStorageStatus.isGranted) {
-          manageStorageStatus = await Permission.manageExternalStorage.request();
-          if (!manageStorageStatus.isGranted) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Manage external storage permission not granted')));
-            return;
-          }
-        }
-      }
-    }
+                if (Platform.isAndroid) {
+                  var androidInfo = await DeviceInfoPlugin().androidInfo;
+                  if (androidInfo.version.sdkInt < 30) {
+                    var storageStatus = await Permission.storage.status;
+                    if (!storageStatus.isGranted) {
+                      storageStatus = await Permission.storage.request();
+                      if (!storageStatus.isGranted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Storage permission not granted')));
+                        return;
+                      }
+                    }
+                  } else {
+                    var manageStorageStatus = await Permission.manageExternalStorage.status;
+                    if (!manageStorageStatus.isGranted) {
+                      manageStorageStatus = await Permission.manageExternalStorage.request();
+                      if (!manageStorageStatus.isGranted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Manage external storage permission not granted')));
+                        return;
+                      }
+                    }
+                  }
+                }
 
-    final bool success = await ApiService.uploadPhoto(widget.user.id, selectedDate.toIso8601String().substring(0, 10), (selectedDate.hour ~/ 2) + 1, image.path);
+                final bool success = await ApiService.uploadPhoto(widget.user.id, selectedDate.toIso8601String().substring(0, 10), (selectedDate.hour ~/ 2) + 1, image.path);
 
-    if (success) {
-      setState(() {
-        // Re-render the current grid to display the uploaded image
-      });
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload photo')));
-    }
+                if (success) {
+                  setState(() {
+                    // Re-render the current grid to display the uploaded image
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload photo')));
+                }
+              },
+            ),
+            ListTile(
+              leading: Icon(Icons.photo_library),
+              title: Text('Choose from gallery'),
+              onTap: () async {
+                Navigator.of(context).pop();
+                final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+
+                if (image == null) return;
+
+                // 권한 체크 및 요청 로직
+                if (Platform.isAndroid) {
+                  var androidInfo = await DeviceInfoPlugin().androidInfo;
+                  if (androidInfo.version.sdkInt < 30) {
+                    var storageStatus = await Permission.storage.status;
+                    if (!storageStatus.isGranted) {
+                      storageStatus = await Permission.storage.request();
+                      if (!storageStatus.isGranted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Storage permission not granted')));
+                        return;
+                      }
+                    }
+                  } else {
+                    var manageStorageStatus = await Permission.manageExternalStorage.status;
+                    if (!manageStorageStatus.isGranted) {
+                      manageStorageStatus = await Permission.manageExternalStorage.request();
+                      if (!manageStorageStatus.isGranted) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Manage external storage permission not granted')));
+                        return;
+                      }
+                    }
+                  }
+                }
+
+                final bool success = await ApiService.uploadPhoto(widget.user.id, selectedDate.toIso8601String().substring(0, 10), (selectedDate.hour ~/ 2) + 1, image.path);
+
+                if (success) {
+                  setState(() {
+                    // Re-render the current grid to display the uploaded image
+                  });
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to upload photo')));
+                }
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
