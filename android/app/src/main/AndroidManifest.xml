@@ -9,7 +9,7 @@
 
 
     <application
-        android:label="myapp"
+        android:label="memo.ment"
         android:theme="@style/LaunchTheme"
         android:icon="@mipmap/ic_launcher">
         <activity
