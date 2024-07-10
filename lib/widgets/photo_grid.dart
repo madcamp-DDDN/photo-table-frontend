@@ -38,9 +38,6 @@ class _PhotoGridState extends State<PhotoGrid> {
   void initState() {
     super.initState();
     photos = widget.photos;
-    print("qwerty ${widget.fixedColumnWidth}");
-    print("qwerty");
-
   }
 
   Future<void> _refreshPhoto(int photoIndex) async {
@@ -84,7 +81,7 @@ class _PhotoGridState extends State<PhotoGrid> {
                   icon: Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {
                     try {
-                      print('Attempting to delete photo with id: ${photo.id}');//삭제하려는 사진 id
+                      print('Attempting to delete photo with id: ${photo.id}'); //삭제하려는 사진 id
                       await ApiService.deletePhoto(photo.id);
                       Navigator.of(context).pop();
                       await _refreshPhoto(photoIndex);
@@ -92,7 +89,7 @@ class _PhotoGridState extends State<PhotoGrid> {
                         SnackBar(content: Text('Photo deleted successfully')),
                       );
                     } catch (error) {
-                      print('Failed to delete photo: $error');//삭제 실패 로그
+                      print('Failed to delete photo: $error'); //삭제 실패 로그
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Failed to delete photo')),
@@ -158,8 +155,8 @@ class _PhotoGridState extends State<PhotoGrid> {
                     child: Container(
                       decoration: BoxDecoration(
                         border: Border.all(
-                            color: Color(0xFF6c6c6c),
-                            width: 0.5,
+                          color: Color(0xFF6c6c6c),
+                          width: 0.5,
                         ), //
                         color: Color(0x80212024),
                       ),
