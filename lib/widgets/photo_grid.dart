@@ -13,7 +13,7 @@ class PhotoGrid extends StatefulWidget {
   final bool isWeekly;
   final User user;
   final DateTime selectedDate;
-  final ScrollController? scrollController; // 추가: 스크롤 컨트롤러
+  final ScrollController? scrollController;
 
   PhotoGrid({
     required this.photos,
@@ -24,7 +24,7 @@ class PhotoGrid extends StatefulWidget {
     required this.user,
     required this.selectedDate,
     this.isWeekly = false,
-    this.scrollController, // 추가: 스크롤 컨트롤러
+    this.scrollController,
   });
 
   @override
@@ -52,10 +52,10 @@ class _PhotoGridState extends State<PhotoGrid> {
 
   void viewPhoto(BuildContext context, Photo? photo, int timeSlot, int photoIndex) async {
     if (photo == null || photo.id.isEmpty) {
-      return; // 빈 사진이면 확대하지 않음
+      return;
     }
 
-    print('Attempting to view photo with id: ${photo.id}'); //사진 아이디 출력
+    print('Attempting to view photo with id: ${photo.id}');
 
     double screenWidth = MediaQuery.of(context).size.width;
     await showDialog(
@@ -81,7 +81,7 @@ class _PhotoGridState extends State<PhotoGrid> {
                   icon: Icon(Icons.delete, color: Colors.red),
                   onPressed: () async {
                     try {
-                      print('Attempting to delete photo with id: ${photo.id}'); //삭제하려는 사진 id
+                      print('Attempting to delete photo with id: ${photo.id}');
                       await ApiService.deletePhoto(photo.id);
                       Navigator.of(context).pop();
                       await _refreshPhoto(photoIndex);
@@ -89,7 +89,7 @@ class _PhotoGridState extends State<PhotoGrid> {
                         SnackBar(content: Text('Photo deleted successfully')),
                       );
                     } catch (error) {
-                      print('Failed to delete photo: $error'); //삭제 실패 로그
+                      print('Failed to delete photo: $error');
                       Navigator.of(context).pop();
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text('Failed to delete photo')),
@@ -104,82 +104,97 @@ class _PhotoGridState extends State<PhotoGrid> {
       },
     );
 
-    // Refresh the photo slot after viewing
     await _refreshPhoto(photoIndex);
   }
 
   @override
   Widget build(BuildContext context) {
     DateTime now = DateTime.now();
-    double totalHeight = widget.photoHeight * 12; // 총 높이 계산 (12개의 시간대)
+    double totalHeight = widget.photoHeight * 12;
     double currentTimePosition = ((now.hour * 60 + now.minute) / (24 * 60)) * totalHeight;
+    int currentHourSlot = now.hour ~/ 2;
 
     return SingleChildScrollView(
-      controller: widget.scrollController, // 수정: 스크롤 컨트롤러 사용
+      controller: widget.scrollController,
       scrollDirection: Axis.vertical,
-      child: Stack(
+      child: LayoutGrid(
+        columnSizes: [
+          FixedTrackSize(widget.fixedColumnWidth),
+          ...List.generate(widget.columnCount, (_) => FlexibleTrackSize(1)),
+        ],
+        rowSizes: List.generate(12, (index) => FixedTrackSize(widget.photoHeight)),
+        rowGap: 0,
+        columnGap: 0,
         children: [
-          LayoutGrid(
-            columnSizes: [
-              FixedTrackSize(widget.fixedColumnWidth),
-              ...List.generate(widget.columnCount, (_) => FlexibleTrackSize(1)),
-            ],
-            rowSizes: List.generate(12, (index) => FixedTrackSize(widget.photoHeight)),
-            rowGap: 0,
-            columnGap: 0,
-            children: [
-              for (int i = 0; i < 12; i++) ...[
-                Container(
-                  alignment: Alignment.topCenter,
-                  padding: EdgeInsets.only(left: 0),
-                  width: 60, // 추가: width를 40으로 설정
+          for (int i = 0; i < 12; i++) ...[
+            Container(
+              alignment: Alignment.topCenter,
+              padding: EdgeInsets.only(left: 0),
+              width: 60,
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: i == currentHourSlot ? Colors.white : Color(0xFF6c6c6c),
+                    width: i == currentHourSlot ? 1.5 : 0.5,
+                  ),
+                  bottom: BorderSide(
+                    color: i == currentHourSlot ? Colors.white : Color(0xFF6c6c6c),
+                    width: i == currentHourSlot ? 1.5 : 0.5,
+                  ),
+                  left: BorderSide(
+                    color: Color(0xFF6c6c6c),
+                    width: 0.5,
+                  ),
+                  right: BorderSide(
+                    color: Color(0xFF6c6c6c),
+                    width: 0.5,
+                  ),
+                ),
+              ),
+              child: Text(
+                '${i * 2}',
+                style: i == currentHourSlot ? TextStyle(color: Colors.white) : TextStyle(color: Color(0xFF8c8c8c)),
+              ),
+            ).withGridPlacement(columnStart: 0, rowStart: i),
+            for (int j = 0; j < widget.columnCount; j++) ...[
+              GestureDetector(
+                onTap: () {
+                  int photoIndex = i * widget.columnCount + j;
+                  if (photoIndex < photos.length && photos[photoIndex] != null && photos[photoIndex]!.id.isNotEmpty) {
+                    viewPhoto(context, photos[photoIndex], i * 2, photoIndex);
+                  }
+                },
+                child: Container(
                   decoration: BoxDecoration(
-                    border: Border.all(
-                      color: Color(0xFF6c6c6c), // 추가: border 색상 설정
-                      width: 0.5, // 추가: border 두께 설정
-                    ),
-                  ),
-                  child: Text(
-                    '${i * 2}',
-                    style: TextStyle(color: Color(0xFF8c8c8c)), // 시간 텍스트 색상을 #8c8c8c로 설정
-                  ),
-                ).withGridPlacement(columnStart: 0, rowStart: i),
-                for (int j = 0; j < widget.columnCount; j++) ...[
-                  GestureDetector(
-                    onTap: () {
-                      int photoIndex = i * widget.columnCount + j;
-                      if (photoIndex < photos.length && photos[photoIndex] != null && photos[photoIndex]!.id.isNotEmpty) {
-                        viewPhoto(context, photos[photoIndex], i * 2, photoIndex);
-                      }
-                    },
-                    child: Container(
-                      decoration: BoxDecoration(
-                        border: Border.all(
-                          color: Color(0xFF6c6c6c),
-                          width: 0.5,
-                        ), //
-                        color: Color(0x80212024),
+                    border: Border(
+                      top: BorderSide(
+                        color: i == currentHourSlot ? Colors.white : Color(0xFF6c6c6c),
+                        width: i == currentHourSlot ? 1.5 : 0.5,
                       ),
-                      width: widget.photoWidth,
-                      height: widget.photoHeight,
-                      child: (i * widget.columnCount + j) < photos.length && photos[i * widget.columnCount + j] != null && photos[i * widget.columnCount + j]!.id.isNotEmpty
-                          ? Image.network(photos[i * widget.columnCount + j]!.photoUrl, fit: BoxFit.cover)
-                          : Center(child: Text('')),
+                      bottom: BorderSide(
+                        color: i == currentHourSlot ? Colors.white : Color(0xFF6c6c6c),
+                        width: i == currentHourSlot ? 1.5 : 0.5,
+                      ),
+                      left: BorderSide(
+                        color: Color(0xFF6c6c6c),
+                        width: 0.5,
+                      ),
+                      right: BorderSide(
+                        color: Color(0xFF6c6c6c),
+                        width: 0.5,
+                      ),
                     ),
-                  ).withGridPlacement(columnStart: j + 1, rowStart: i),
-                ],
-              ],
+                    color: Color(0x80212024),
+                  ),
+                  width: widget.photoWidth,
+                  height: widget.photoHeight,
+                  child: (i * widget.columnCount + j) < photos.length && photos[i * widget.columnCount + j] != null && photos[i * widget.columnCount + j]!.id.isNotEmpty
+                      ? Image.network(photos[i * widget.columnCount + j]!.photoUrl, fit: BoxFit.cover)
+                      : Center(child: Text('')),
+                ),
+              ).withGridPlacement(columnStart: j + 1, rowStart: i),
             ],
-          ),
-          Positioned(
-            top: currentTimePosition,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 2,
-              color: Colors.red,
-            ),
-          ),
+          ],
         ],
       ),
     );
