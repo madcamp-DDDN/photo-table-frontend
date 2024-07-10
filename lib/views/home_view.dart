@@ -238,7 +238,7 @@ class _HomeViewState extends State<HomeView> {
       appBar: AppBar(
         elevation: 0,
         backgroundColor: Colors.transparent,
-          //backgroundColor: Color(0x80212024),
+        //backgroundColor: Color(0x80212024),
         title: Padding(
           padding: const EdgeInsets.only(left: 10.0), // AppBar의 title에 좌우 패딩 추가
           child: Image.asset(
