@@ -30,7 +30,7 @@ class _DailyPhotoGridState extends State<DailyPhotoGrid> {
     double screenWidth = MediaQuery.of(context).size.width;
     double fixedColumnWidth = 30.0; // 눈금의 고정 너비
     double photoWidth = screenWidth - fixedColumnWidth; // 각 사진의 너비
-    double photoHeight = (photoWidth / 3) * 4; // 가로 3: 세로 4 비율
+    double photoHeight = (photoWidth) * 0.9; // 가로 3: 세로 4 비율
 
     final double screenHeight = MediaQuery.of(context).size.height;
     final double position = (hour ~/ 2) * (photoHeight + 1); // +1 for possible row gap

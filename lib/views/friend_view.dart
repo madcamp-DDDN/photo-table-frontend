@@ -75,7 +75,7 @@ class _FriendViewState extends State<FriendView> {
                     columnCount: 1,
                     fixedColumnWidth: 30.0,
                     photoWidth: MediaQuery.of(context).size.width - 30.0,
-                    photoHeight: (MediaQuery.of(context).size.width - 30.0) / 3 * 4,
+                    photoHeight: (MediaQuery.of(context).size.width - 30.0) * 0.9,
                     user: AppUser.User(id: friend.id, name: friend.name, profileImageUrl: friend.profilePicUrl),
                     selectedDate: DateTime.now(),
                   );
