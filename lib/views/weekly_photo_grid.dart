@@ -86,20 +86,6 @@ class WeeklyPhotoGrid extends StatelessWidget {
                 ],
               ),
             );
-            // return Padding(
-            //   // padding: const EdgeInsets.all(16.0), // 패딩 추가
-            //   padding: const EdgeInsets.all(27.0).copyWith(top: 100.0),
-            //   child: PhotoGrid(
-            //     photos: photos,
-            //     columnCount: 7,
-            //     fixedColumnWidth: fixedColumnWidth,
-            //     photoWidth: photoWidth,
-            //     photoHeight: photoHeight,
-            //     user: user,
-            //     selectedDate: selectedDate,
-            //     isWeekly: true,
-            //   ),
-            // );
           },
         ),
       ),

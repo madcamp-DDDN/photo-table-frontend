@@ -158,15 +158,15 @@ class _FriendViewState extends State<FriendView> {
           elevation: 0,
           backgroundColor: Colors.transparent,
           title: Padding(
-            padding: const EdgeInsets.only(left: 10.0), // AppBar의 title에 좌우 패딩 추가
+            padding: const EdgeInsets.only(left: 10.0, top: 8.0), // AppBar의 title에 좌우 패딩 추가
             child: Image.asset(
               'assets/logo1.png', // 로고 이미지 경로 설정
-              height: 40, // 로고 이미지 높이 설정
+              height: 45, // 로고 이미지 높이 설정
             ),
           ),
           actions: [
             IconButton(
-              padding: const EdgeInsets.only(right: 10.0),
+              padding: const EdgeInsets.only(right: 40.0, top: 8.0),
               icon: Icon(Icons.person_add, color: Colors.white),
               onPressed: _showAddFriendDialog,
             ),
@@ -192,8 +192,8 @@ class _FriendViewState extends State<FriendView> {
                   child: ListTile(
                     leading: userProfile.profileImageUrl.isNotEmpty
                         ? Container(
-                      width: 50,
-                      height: 50,
+                      width: 55,
+                      height: 55,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         image: DecorationImage(
@@ -205,12 +205,16 @@ class _FriendViewState extends State<FriendView> {
                         : Icon(Icons.account_circle, size: 50, color: Colors.white),
                     title: Text(
                       userProfile.name.isNotEmpty ? userProfile.name : 'Unknown',
-                      style: TextStyle(color: Colors.white),
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 20
+                      ),
                     ),
                   ),
                 ),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  // padding: const EdgeInsets.symmetric(horizontal: 16.0, ),
+                  padding: const EdgeInsets.only(left: 16.0, right: 16.0, top: 18.0, bottom: 3.0),
                   child: Divider(color: Colors.grey),
                 ),
                 Expanded(

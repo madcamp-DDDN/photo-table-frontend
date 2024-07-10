@@ -240,25 +240,25 @@ class _HomeViewState extends State<HomeView> {
         backgroundColor: Colors.transparent,
         //backgroundColor: Color(0x80212024),
         title: Padding(
-        padding: const EdgeInsets.only(left: 10.0), // AppBar의 title에 좌우 패딩 추가
+        padding: const EdgeInsets.only(left: 10.0, top: 8.0), // AppBar의 title에 좌우 패딩 추가
           child: Image.asset(
           'assets/logo1.png', // 로고 이미지 경로 설정
-          height: 40, // 로고 이미지 높이 설정
+          height: 45, // 로고 이미지 높이 설정
           ),
         ),
           actions: [
             IconButton(
-              padding: const EdgeInsets.only(left: 50.0),
+              padding: const EdgeInsets.only(left: 50.0, top: 8.0),
               icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week, color: Colors.white),
               onPressed: _toggleView,
             ),
             IconButton(
-              padding: const EdgeInsets.only(left: 15.0),
+              padding: const EdgeInsets.only(left: 15.0, right: 14.0, top: 8.0),
               icon: Icon(Icons.download, color: Colors.white), // 다운로드 버튼
               onPressed: _downloadMergedImage, // 버튼을 누르면 _downloadMergedImage 함수 호출
             ),
             IconButton(
-              padding: const EdgeInsets.only(right: 10.0),
+              padding: const EdgeInsets.only(right: 30.0, top: 8.0),
               icon: Icon(Icons.add, color: Colors.white),
               onPressed: _pickAndUploadImage,
             ),
