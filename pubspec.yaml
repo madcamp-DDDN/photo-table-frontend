@@ -68,4 +68,5 @@ flutter:
     - assets/blue_gradient.png
     - assets/pink_gradient.png
     - assets/login_button.png
+    - assets/app_icon.png
   uses-material-design: true
