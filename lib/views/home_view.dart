@@ -234,21 +234,36 @@ class _HomeViewState extends State<HomeView> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(isWeeklyView
-            ? '${selectedDate.month}-${selectedDate.day} ~ ${selectedDate.add(Duration(days: 6)).month}-${selectedDate.add(Duration(days: 6)).day}'
-            : selectedDate.toIso8601String().substring(0, 10)),
-        actions: [
-          IconButton(
-            icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week),
-            onPressed: _toggleView,
+        extendBodyBehindAppBar: true,
+        appBar: AppBar(
+        elevation: 0,
+        backgroundColor: Colors.transparent,
+        //backgroundColor: Color(0x80212024),
+        title: Padding(
+        padding: const EdgeInsets.only(left: 10.0), // AppBar의 title에 좌우 패딩 추가
+          child: Image.asset(
+          'assets/logo1.png', // 로고 이미지 경로 설정
+          height: 40, // 로고 이미지 높이 설정
           ),
-          IconButton(
-            icon: Icon(Icons.download), // 다운로드 버튼
-            onPressed: _downloadMergedImage, // 버튼을 누르면 _downloadMergedImage 함수 호출
-          ),
-        ],
-      ),
+        ),
+          actions: [
+            IconButton(
+              padding: const EdgeInsets.only(left: 50.0),
+              icon: Icon(isWeeklyView ? Icons.view_day : Icons.view_week, color: Colors.white),
+              onPressed: _toggleView,
+            ),
+            IconButton(
+              padding: const EdgeInsets.only(left: 15.0),
+              icon: Icon(Icons.download, color: Colors.white), // 다운로드 버튼
+              onPressed: _downloadMergedImage, // 버튼을 누르면 _downloadMergedImage 함수 호출
+            ),
+            IconButton(
+              padding: const EdgeInsets.only(right: 10.0),
+              icon: Icon(Icons.add, color: Colors.white),
+              onPressed: _pickAndUploadImage,
+            ),
+          ],
+        ),
       body: isWeeklyView
           ? PageView.builder(
         controller: _weeklyPageController,
@@ -269,10 +284,6 @@ class _HomeViewState extends State<HomeView> {
           DateTime currentDate = DateTime.now().subtract(Duration(days: offset));
           return DailyPhotoGrid(selectedDate: currentDate, user: widget.user);
         },
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _pickAndUploadImage,
-        child: Icon(Icons.add),
       ),
     );
   }

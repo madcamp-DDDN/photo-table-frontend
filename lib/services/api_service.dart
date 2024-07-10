@@ -60,4 +60,17 @@ class ApiService {
     return response;
   }
 
+  //사진삭제 api
+  static Future<void> deletePhoto(String photoId) async {
+    final url = Uri.parse('${DotEnvConfig.apiBaseUrl}/api/photos/$photoId');
+    final response = await http.delete(url);
+
+    if (response.statusCode != 200) {
+      // throw Exception('Failed to delete photo');
+      final responseBody = jsonDecode(response.body);
+      throw Exception('Failed to delete photo: ${responseBody['error']}');
+    }
+  }
+
+
 }

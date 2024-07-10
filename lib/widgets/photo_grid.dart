@@ -55,20 +55,50 @@ class _PhotoGridState extends State<PhotoGrid> {
       return; // 빈 사진이면 확대하지 않음
     }
 
+    print('Attempting to view photo with id: ${photo.id}'); //사진 아이디 출력
+
     double screenWidth = MediaQuery.of(context).size.width;
     await showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          child: GestureDetector(
-            onTap: () {
-              Navigator.of(context).pop();
-            },
-            child: Container(
-              width: screenWidth,
-              height: (screenWidth / 3) * 4,
-              child: Image.network(photo.photoUrl, fit: BoxFit.cover),
-            ),
+          child: Stack(
+            children: [
+              GestureDetector(
+                onTap: () {
+                  Navigator.of(context).pop();
+                },
+                child: Container(
+                  width: screenWidth,
+                  height: (screenWidth / 3) * 4,
+                  child: Image.network(photo.photoUrl, fit: BoxFit.cover),
+                ),
+              ),
+              Positioned(
+                top: 16,
+                right: 16,
+                child: IconButton(
+                  icon: Icon(Icons.delete, color: Colors.red),
+                  onPressed: () async {
+                    try {
+                      print('Attempting to delete photo with id: ${photo.id}'); //삭제하려는 사진 id
+                      await ApiService.deletePhoto(photo.id);
+                      Navigator.of(context).pop();
+                      await _refreshPhoto(photoIndex);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Photo deleted successfully')),
+                      );
+                    } catch (error) {
+                      print('Failed to delete photo: $error'); //삭제 실패 로그
+                      Navigator.of(context).pop();
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Failed to delete photo')),
+                      );
+                    }
+                  },
+                ),
+              ),
+            ],
           ),
         );
       },
@@ -100,9 +130,19 @@ class _PhotoGridState extends State<PhotoGrid> {
             children: [
               for (int i = 0; i < 12; i++) ...[
                 Container(
-                  alignment: Alignment.topLeft,
-                  padding: EdgeInsets.only(left: 8),
-                  child: Text('${i * 2}:00'),
+                  alignment: Alignment.topCenter,
+                  padding: EdgeInsets.only(left: 0),
+                  width: 60, // 추가: width를 40으로 설정
+                  decoration: BoxDecoration(
+                    border: Border.all(
+                      color: Color(0xFF6c6c6c), // 추가: border 색상 설정
+                      width: 0.5, // 추가: border 두께 설정
+                    ),
+                  ),
+                  child: Text(
+                    '${i * 2}',
+                    style: TextStyle(color: Color(0xFF8c8c8c)), // 시간 텍스트 색상을 #8c8c8c로 설정
+                  ),
                 ).withGridPlacement(columnStart: 0, rowStart: i),
                 for (int j = 0; j < widget.columnCount; j++) ...[
                   GestureDetector(
@@ -113,12 +153,18 @@ class _PhotoGridState extends State<PhotoGrid> {
                       }
                     },
                     child: Container(
-                      color: Colors.grey[300],
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: Color(0xFF6c6c6c),
+                          width: 0.5,
+                        ), //
+                        color: Color(0x80212024),
+                      ),
                       width: widget.photoWidth,
                       height: widget.photoHeight,
                       child: (i * widget.columnCount + j) < photos.length && photos[i * widget.columnCount + j] != null && photos[i * widget.columnCount + j]!.id.isNotEmpty
                           ? Image.network(photos[i * widget.columnCount + j]!.photoUrl, fit: BoxFit.cover)
-                          : Center(child: Text('${i * 2}:00')),
+                          : Center(child: Text('')),
                     ),
                   ).withGridPlacement(columnStart: j + 1, rowStart: i),
                 ],
