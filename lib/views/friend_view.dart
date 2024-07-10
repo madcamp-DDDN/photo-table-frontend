@@ -3,9 +3,10 @@ import 'package:photo_table/services/friend_service.dart';
 import '../models/user_model.dart' as AppUser;
 import '../models/friend_model.dart';
 import 'package:flutter/services.dart';
-import '../widgets/photo_grid.dart';
+import 'friend_list_view.dart';
 import '../models/photo_model.dart';
 import '../services/api_service.dart';
+import '../widgets/photo_grid.dart';
 
 class FriendView extends StatefulWidget {
   final AppUser.User user;
@@ -151,14 +152,25 @@ class _FriendViewState extends State<FriendView> {
         ),
       ),
       child: Scaffold(
+        extendBodyBehindAppBar: true,
         backgroundColor: Colors.transparent,
         appBar: AppBar(
-          title: Text(
-            'Friends',
-            style: TextStyle(color: Colors.white),
-          ),
-          backgroundColor: Colors.transparent,
           elevation: 0,
+          backgroundColor: Colors.transparent,
+          title: Padding(
+            padding: const EdgeInsets.only(left: 10.0), // AppBar의 title에 좌우 패딩 추가
+            child: Image.asset(
+              'assets/logo1.png', // 로고 이미지 경로 설정
+              height: 40, // 로고 이미지 높이 설정
+            ),
+          ),
+          actions: [
+            IconButton(
+              padding: const EdgeInsets.only(right: 10.0),
+              icon: Icon(Icons.person_add, color: Colors.white),
+              onPressed: _showAddFriendDialog,
+            ),
+          ],
         ),
         body: FutureBuilder<AppUser.User>(
           future: _userProfile,
@@ -175,23 +187,26 @@ class _FriendViewState extends State<FriendView> {
             final userProfile = snapshot.data!;
             return Column(
               children: [
-                ListTile(
-                  leading: userProfile.profileImageUrl.isNotEmpty
-                      ? Container(
-                    width: 50,
-                    height: 50,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      image: DecorationImage(
-                        image: NetworkImage(userProfile.profileImageUrl),
-                        fit: BoxFit.cover,
+                Padding(
+                  padding: const EdgeInsets.only(top: 100.0, left: 16.0, right: 16.0),
+                  child: ListTile(
+                    leading: userProfile.profileImageUrl.isNotEmpty
+                        ? Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: NetworkImage(userProfile.profileImageUrl),
+                          fit: BoxFit.cover,
+                        ),
                       ),
+                    )
+                        : Icon(Icons.account_circle, size: 50, color: Colors.white),
+                    title: Text(
+                      userProfile.name.isNotEmpty ? userProfile.name : 'Unknown',
+                      style: TextStyle(color: Colors.white),
                     ),
-                  )
-                      : Icon(Icons.account_circle, size: 50, color: Colors.white),
-                  title: Text(
-                    userProfile.name.isNotEmpty ? userProfile.name : 'Unknown',
-                    style: TextStyle(color: Colors.white),
                   ),
                 ),
                 Padding(
@@ -199,53 +214,14 @@ class _FriendViewState extends State<FriendView> {
                   child: Divider(color: Colors.grey),
                 ),
                 Expanded(
-                  child: FutureBuilder<List<Friend>>(
-                    future: _friends,
-                    builder: (context, snapshot) {
-                      if (snapshot.connectionState == ConnectionState.waiting) {
-                        return Center(child: CircularProgressIndicator());
-                      } else if (snapshot.hasError) {
-                        print('Error fetching friends: ${snapshot.error}');
-                        return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.white)));
-                      } else if (!snapshot.hasData || snapshot.data == null) {
-                        return Center(child: Text('No friends data found', style: TextStyle(color: Colors.white)));
-                      }
-
-                      final friends = snapshot.data ?? [];
-                      return ListView.builder(
-                        itemCount: friends.length,
-                        itemBuilder: (context, index) {
-                          final friend = friends[index];
-                          return ListTile(
-                            leading: friend.profilePicUrl.isNotEmpty
-                                ? Container(
-                              width: 50,
-                              height: 50,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                image: DecorationImage(
-                                  image: NetworkImage(friend.profilePicUrl),
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                            )
-                                : Icon(Icons.account_circle, size: 50, color: Colors.white),
-                            title: Text(friend.name.isNotEmpty ? friend.name : 'Unknown', style: TextStyle(color: Colors.white)),
-                            onTap: () => _showFriendDailyPhotos(friend),
-                          );
-                        },
-                      );
-                    },
+                  child: FriendListView(
+                    friendsFuture: _friends,
+                    showFriendDailyPhotos: _showFriendDailyPhotos,
                   ),
                 ),
               ],
             );
           },
-        ),
-        floatingActionButton: FloatingActionButton(
-          onPressed: _showAddFriendDialog,
-          child: Icon(Icons.add),
-          backgroundColor: Colors.amber,
         ),
       ),
     );
