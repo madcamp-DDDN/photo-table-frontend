@@ -21,19 +21,24 @@ class _DailyPhotoGridState extends State<DailyPhotoGrid> {
   void initState() {
     super.initState();
     _scrollController = ScrollController();
-    WidgetsBinding.instance?.addPostFrameCallback((_) {
-      _scrollToCurrentTime();
-    });
   }
 
   void _scrollToCurrentTime() {
     final now = DateTime.now();
     final int hour = now.hour;
-    final double screenHeight = MediaQuery.of(context).size.height;
-    final double photoHeight = (MediaQuery.of(context).size.width - 60.0) / 3 * 4;
-    final double position = hour * (photoHeight + 1); // +1 for possible row gap
 
-    _scrollController.jumpTo(position - screenHeight / 2 + photoHeight / 2);
+    double screenWidth = MediaQuery.of(context).size.width;
+    double fixedColumnWidth = 30.0; // 눈금의 고정 너비
+    double photoWidth = screenWidth - fixedColumnWidth; // 각 사진의 너비
+    double photoHeight = (photoWidth / 3) * 4; // 가로 3: 세로 4 비율
+
+    final double screenHeight = MediaQuery.of(context).size.height;
+    final double position = (hour ~/ 2) * (photoHeight + 1); // +1 for possible row gap
+
+    if (_scrollController.hasClients) {
+      _scrollController.jumpTo(position - screenHeight / 2 + photoHeight / 2);
+    }
+    print("_scrollToCurrentTime executed");
   }
 
   @override
@@ -41,8 +46,8 @@ class _DailyPhotoGridState extends State<DailyPhotoGrid> {
     double screenWidth = MediaQuery.of(context).size.width;
     double fixedColumnWidth = 30.0; // 눈금의 고정 너비
     double photoWidth = screenWidth - fixedColumnWidth; // 각 사진의 너비
-    double photoHeight = (photoWidth / 3) * 4; // 가로 3: 세로 4 비율
-
+    // double photoHeight = (photoWidth / 3) * 4; // 가로 3: 세로 4 비율
+    double photoHeight = photoWidth*0.9;
     return Container(
       decoration: BoxDecoration(
         image: DecorationImage(
@@ -50,7 +55,7 @@ class _DailyPhotoGridState extends State<DailyPhotoGrid> {
           fit: BoxFit.cover,
         ),
       ),
-      child: Scaffold( // Scaffold 추가
+      child: Scaffold(
         backgroundColor: Colors.transparent, // Scaffold 배경색을 투명으로 설정
         body: FutureBuilder<List<Photo?>>(
           future: ApiService.fetchPhotos(widget.user.id, widget.selectedDate.toIso8601String().substring(0, 10)),
@@ -62,6 +67,10 @@ class _DailyPhotoGridState extends State<DailyPhotoGrid> {
             }
 
             final photos = snapshot.data ?? [];
+            WidgetsBinding.instance?.addPostFrameCallback((_) {
+              _scrollToCurrentTime();
+            });
+
             return Padding(
               padding: const EdgeInsets.all(27.0).copyWith(top: 100.0), // 패딩 추가, top 패딩을 100으로 설정
               child: Column(
@@ -78,7 +87,7 @@ class _DailyPhotoGridState extends State<DailyPhotoGrid> {
                   SizedBox(height: 5), // 텍스트와 그리드 사이에 간격 추가
                   Expanded(
                     child: PhotoGrid(
-                      scrollController: _scrollController, // 스크롤 컨트롤러 추가
+                      scrollController: _scrollController,
                       photos: photos,
                       columnCount: 1,
                       fixedColumnWidth: fixedColumnWidth,
@@ -91,7 +100,6 @@ class _DailyPhotoGridState extends State<DailyPhotoGrid> {
                 ],
               ),
             );
-
           },
         ),
       ),

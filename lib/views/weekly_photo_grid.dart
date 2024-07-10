@@ -35,8 +35,8 @@ class WeeklyPhotoGrid extends StatelessWidget {
     double screenWidth = MediaQuery.of(context).size.width;
     double fixedColumnWidth = 20.0; // 눈금의 고정 너비
     double photoWidth = (screenWidth - fixedColumnWidth) / 7; // 각 사진의 너비 (7 열)
-    double photoHeight = (photoWidth / 3) * 4; // 가로 3: 세로 4 비율
-
+    // double photoHeight = (photoWidth / 3) * 4; // 가로 3: 세로 4 비율
+    double photoHeight = photoWidth * 0.9;
 
     return Container(
       decoration: BoxDecoration(

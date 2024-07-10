@@ -3,9 +3,10 @@ import 'package:photo_table/services/friend_service.dart';
 import '../models/user_model.dart' as AppUser;
 import '../models/friend_model.dart';
 import 'package:flutter/services.dart';
-import '../widgets/photo_grid.dart';
+import 'friend_list_view.dart';
 import '../models/photo_model.dart';
 import '../services/api_service.dart';
+import '../widgets/photo_grid.dart';
 
 class FriendView extends StatefulWidget {
   final AppUser.User user;
@@ -49,44 +50,92 @@ class _FriendViewState extends State<FriendView> {
     }
   }
 
-  void _showFriendDailyPhotos(Friend friend) {//친구 시간표 불러오기
+  void _showFriendDailyPhotos(Friend friend) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return Dialog(
-          child: Scaffold(
-            appBar: AppBar(
-              title: Text('${friend.name}\'s Photos'),
-              actions: [
-                IconButton(
-                  icon: Icon(Icons.close),
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-            ),
-            body: FutureBuilder<List<Photo?>>(
-              future: ApiService.fetchPhotos(friend.id, DateTime.now().toIso8601String().substring(0, 10)),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                } else if (snapshot.hasError) {
-                  return Center(child: Text('Error: ${snapshot.error}'));
-                }
+          child: Container(
+            color: Colors.black,
+            child: Scaffold(
+              backgroundColor: Colors.transparent,
+              body: FutureBuilder<List<Photo?>>(
+                future: ApiService.fetchPhotos(friend.id, DateTime.now().toIso8601String().substring(0, 10)),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return Center(child: CircularProgressIndicator());
+                  } else if (snapshot.hasError) {
+                    return Center(child: Text('Error: ${snapshot.error}'));
+                  }
 
-                final photos = snapshot.data ?? [];
-                return PhotoGrid(
-                  photos: photos,
-                  columnCount: 1,
-                  fixedColumnWidth: 60.0,
-                  photoWidth: MediaQuery.of(context).size.width - 60.0,
-                  photoHeight: (MediaQuery.of(context).size.width - 60.0) / 3 * 4,
-                  user: AppUser.User(id: friend.id, name: friend.name, profileImageUrl: friend.profilePicUrl),
-                  selectedDate: DateTime.now(),
-                );
-              },
+                  final photos = snapshot.data ?? [];
+                  return PhotoGrid(
+                    scrollController: ScrollController(),
+                    photos: photos,
+                    columnCount: 1,
+                    fixedColumnWidth: 30.0,
+                    photoWidth: MediaQuery.of(context).size.width - 30.0,
+                    photoHeight: (MediaQuery.of(context).size.width - 30.0) / 3 * 4,
+                    user: AppUser.User(id: friend.id, name: friend.name, profileImageUrl: friend.profilePicUrl),
+                    selectedDate: DateTime.now(),
+                  );
+                },
+              ),
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _showAddFriendDialog() {
+    TextEditingController _controller = TextEditingController();
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: Colors.grey[900],
+          title: Text(
+            'Add Friend',
+            style: TextStyle(color: Colors.white),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _controller,
+                decoration: InputDecoration(
+                  labelText: 'Enter friend link token',
+                  labelStyle: TextStyle(color: Colors.white),
+                  border: OutlineInputBorder(),
+                ),
+                style: TextStyle(color: Colors.white),
+              ),
+              SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _acceptFriend(_controller.text);
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Add Friend'),
+                    ),
+                  ),
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: ElevatedButton(
+                      onPressed: () {
+                        _generateFriendLink();
+                        Navigator.of(context).pop();
+                      },
+                      child: Text('Generate Friend Link'),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         );
       },
@@ -95,118 +144,85 @@ class _FriendViewState extends State<FriendView> {
 
   @override
   Widget build(BuildContext context) {
-    TextEditingController _controller = TextEditingController();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Friends'),
+    return Container(
+      decoration: BoxDecoration(
+        image: DecorationImage(
+          image: AssetImage('assets/background.jpg'), // 배경 이미지 설정
+          fit: BoxFit.cover,
+        ),
       ),
-      body: FutureBuilder<AppUser.User>(
-        future: _userProfile,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return Center(child: CircularProgressIndicator());
-          } else if (snapshot.hasError) {
-            print('Error fetching user profile: ${snapshot.error}');
-            return Center(child: Text('Error: ${snapshot.error}'));
-          } else if (!snapshot.hasData || snapshot.data == null) {
-            return Center(child: Text('No user data found'));
-          }
+      child: Scaffold(
+        extendBodyBehindAppBar: true,
+        backgroundColor: Colors.transparent,
+        appBar: AppBar(
+          elevation: 0,
+          backgroundColor: Colors.transparent,
+          title: Padding(
+            padding: const EdgeInsets.only(left: 10.0), // AppBar의 title에 좌우 패딩 추가
+            child: Image.asset(
+              'assets/logo1.png', // 로고 이미지 경로 설정
+              height: 40, // 로고 이미지 높이 설정
+            ),
+          ),
+          actions: [
+            IconButton(
+              padding: const EdgeInsets.only(right: 10.0),
+              icon: Icon(Icons.person_add, color: Colors.white),
+              onPressed: _showAddFriendDialog,
+            ),
+          ],
+        ),
+        body: FutureBuilder<AppUser.User>(
+          future: _userProfile,
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            } else if (snapshot.hasError) {
+              print('Error fetching user profile: ${snapshot.error}');
+              return Center(child: Text('Error: ${snapshot.error}', style: TextStyle(color: Colors.white)));
+            } else if (!snapshot.hasData || snapshot.data == null) {
+              return Center(child: Text('No user data found', style: TextStyle(color: Colors.white)));
+            }
 
-          final userProfile = snapshot.data!;//내 정보
-          return Column(
-            children: [
-              ListTile(
-                leading: userProfile.profileImageUrl.isNotEmpty
-                    ? Container(
-                  width: 50,
-                  height: 50,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: DecorationImage(
-                      image: NetworkImage(userProfile.profileImageUrl),
-                      fit: BoxFit.cover,
+            final userProfile = snapshot.data!;
+            return Column(
+              children: [
+                Padding(
+                  padding: const EdgeInsets.only(top: 100.0, left: 16.0, right: 16.0),
+                  child: ListTile(
+                    leading: userProfile.profileImageUrl.isNotEmpty
+                        ? Container(
+                      width: 50,
+                      height: 50,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        image: DecorationImage(
+                          image: NetworkImage(userProfile.profileImageUrl),
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                    )
+                        : Icon(Icons.account_circle, size: 50, color: Colors.white),
+                    title: Text(
+                      userProfile.name.isNotEmpty ? userProfile.name : 'Unknown',
+                      style: TextStyle(color: Colors.white),
                     ),
                   ),
-                )
-                    : Icon(Icons.account_circle, size: 50),
-                title: Text(userProfile.name.isNotEmpty ? userProfile.name : 'Unknown'),
-              ),
-              Padding(//friend link token
-                padding: const EdgeInsets.all(8.0),
-                child: Column(
-                  children: [
-                    TextField(
-                      controller: _controller,
-                      decoration: InputDecoration(
-                        labelText: 'Enter friend link token',
-                        border: OutlineInputBorder(),
-                      ),
-                    ),
-                    SizedBox(height: 10),
-                    Row(// 버튼 두개
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () => _acceptFriend(_controller.text),
-                            child: Text('Add Friend'),
-                          ),
-                        ),
-                        SizedBox(width: 10),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: _generateFriendLink,
-                            child: Text('Generate Friend Link'),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ),
-              ),
-              Expanded(//friend list
-                child: FutureBuilder<List<Friend>>(
-                  future: _friends,
-                  builder: (context, snapshot) {
-                    if (snapshot.connectionState == ConnectionState.waiting) {
-                      return Center(child: CircularProgressIndicator());
-                    } else if (snapshot.hasError) {
-                      print('Error fetching friends: ${snapshot.error}');
-                      return Center(child: Text('Error: ${snapshot.error}'));
-                    } else if (!snapshot.hasData || snapshot.data == null) {
-                      return Center(child: Text('No friends data found'));
-                    }
-
-                    final friends = snapshot.data ?? [];
-                    return ListView.builder(
-                      itemCount: friends.length,
-                      itemBuilder: (context, index) {
-                        final friend = friends[index];
-                        return ListTile(
-                          leading: friend.profilePicUrl.isNotEmpty
-                              ? Container(
-                            width: 50,
-                            height: 50,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              image: DecorationImage(
-                                image: NetworkImage(friend.profilePicUrl),
-                                fit: BoxFit.cover,
-                              ),
-                            ),
-                          )
-                              : Icon(Icons.account_circle, size: 50),
-                          title: Text(friend.name.isNotEmpty ? friend.name : 'Unknown'),
-                          onTap: () => _showFriendDailyPhotos(friend),
-                        );
-                      },
-                    );
-                  },
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  child: Divider(color: Colors.grey),
                 ),
-              ),
-            ],
-          );
-        },
+                Expanded(
+                  child: FriendListView(
+                    friendsFuture: _friends,
+                    showFriendDailyPhotos: _showFriendDailyPhotos,
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
       ),
     );
   }
